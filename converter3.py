@@ -47,7 +47,7 @@ import os.path
 import cv2
 
 cameraPort = 0
-#camera = cv2.VideoCapture(cameraPort)
+camera = cv2.VideoCapture(cameraPort)
 
 def get_image():
     # read is the easiest way to get a full image out of a VideoCapture object.
@@ -56,7 +56,7 @@ def get_image():
 
 
 def video():    
-    for x in range(1,10):
+    for x in range(1,8):
       cv2_image = get_image()
       im = cv2.cvtColor(cv2_image,cv2.COLOR_BGR2RGB)
       #im = Image.fromarray(cv2_image)                 
@@ -192,15 +192,16 @@ if __name__ == '__main__':
                        't': 'Tritanope',}
     
     #cv2_image = get_image()
-    cv2_image = cv2.imread("/Users/orbarda/Downloads/IMG_4366smaller.jpg")
-    im = cv2.cvtColor(cv2_image,cv2.COLOR_BGR2RGB)
+    #cv2_image = cv2.imread("/Users/orbarda/Downloads/IMG_4366smaller.jpg")
+    #im = cv2.cvtColor(cv2_image,cv2.COLOR_BGR2RGB)
     #im = Image.fromarray(cv2_image)                 
-    image = execute(im ,'d')
+    #image = execute(im ,'d')
     #cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     #cv2.imshow('image',image)
     #cv2.waitKey(0)
-    cv2.imwrite("/Users/orbarda/Downloads/offir2.jpg", image)
+    #cv2.imwrite("/Users/orbarda/Downloads/offir2.jpg", image)
 
     #camera.release()
+    video()
     cv2.destroyAllWindows()
 
