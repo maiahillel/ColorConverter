@@ -39,41 +39,98 @@
 
    @copyright: 2007 by Oliver Siemoneit
    @license: GNU GPL, see COPYING for details.
+
 """
 import numpy
-from PIL import Image
 import os.path
-#import VideoCapture as VC
 import cv2
+from numba import vectorize
+
 
 cameraPort = 0
 camera = cv2.VideoCapture(cameraPort)
 
 def get_image():
-    # read is the easiest way to get a full image out of a VideoCapture object.
+   # read is the easiest way to get a full image out of a VideoCapture object.
     ret, im = camera.read()
     return im
 
 
-def video():    
-    for x in range(1,8):
+def video():
+
+    for x in range(1,4):
       cv2_image = get_image()
       im = cv2.cvtColor(cv2_image,cv2.COLOR_BGR2RGB)
-      #im = Image.fromarray(cv2_image)                 
+      lightReflectReduction(im)       
       image = execute(im ,'p')
-      #cv2.namedWindow('image', cv2.WINDOW_NORMAL)
       cv2.imshow('image',image)
       cv2.waitKey(10)
-      #im.show()
 
-"""
-def capture_image():
-  cam = VC.Device() # initialize the webcam
-  img = cam.getImage() # in my testing the first getImage stays black.
-  img = cam.getImage() # capture the current image
-  del cam # no longer need the cam. uninitialize
-  return img
-"""
+
+def lightReflectReduction(imageToSet):
+    rows = imageToSet.shape[0]
+    cols = imageToSet.shape[1]
+    
+    for i in xrange(rows):
+      for j in xrange(cols):
+        R = imageToSet.item(i,j,0)
+        G = imageToSet.item(i,j,1)
+        B = imageToSet.item(i,j,2)
+        sumR = 0
+        sumG = 0
+        sumB = 0
+        count = 0
+        if ((B >= 220) and (G >= 220) and (R >= 220)):
+          
+          if(i > 0):
+            sumR += imageToSet.item(i - 1,j,0)
+            sumG += imageToSet.item(i - 1,j,1)
+            sumB += imageToSet.item(i - 1,j,2)
+            count = count + 1
+            if(j > 0):
+              sumR += imageToSet.item(i - 1,j - 1,0)
+              sumG += imageToSet.item(i - 1,j - 1,1)
+              sumB += imageToSet.item(i - 1,j - 1,2)
+              count = count + 1
+          
+          if(j > 0):
+            sumR += imageToSet.item(i,j - 1,0)
+            sumG += imageToSet.item(i,j - 1,1)
+            sumB += imageToSet.item(i,j - 1,2)
+            count = count + 1
+            if(i < rows - 1):
+              sumR += imageToSet.item(i + 1,j - 1,0)
+              sumG += imageToSet.item(i + 1,j - 1,1)
+              sumB += imageToSet.item(i + 1,j - 1,2)
+              count = count + 1
+          
+          if(i < rows - 1):
+            sumR += imageToSet.item(i + 1,j,0)
+            sumG += imageToSet.item(i + 1,j,1)
+            sumB += imageToSet.item(i + 1,j,2)
+            count = count + 1
+            if(j < cols - 1):
+              sumR += imageToSet.item(i + 1,j + 1,0)
+              sumG += imageToSet.item(i + 1,j + 1,1)
+              sumB += imageToSet.item(i + 1,j + 1,2)
+              count = count + 1
+
+          if(j < cols - 1):
+            sumR += imageToSet.item(i,j + 1,0)
+            sumG += imageToSet.item(i,j + 1,1)
+            sumB += imageToSet.item(i,j + 1,2)
+            count = count + 1
+            if(i > 0):
+              sumR += imageToSet.item(i,j + 1,0)
+              sumG += imageToSet.item(i,j + 1,1)
+              sumB += imageToSet.item(i,j + 1,2)
+              count = count + 1
+
+          imageToSet.itemset((i,j,0), sumR / count)
+          imageToSet.itemset((i,j,1), sumG / count)
+          imageToSet.itemset((i,j,2), sumB / count) 
+
+#@vectorize(['float32[:, :](float32[:, :], int8)'], target='gpu')
 def execute(im, color_deficit):
 
 
@@ -105,6 +162,7 @@ def execute(im, color_deficit):
     lms2lmst = numpy.array([[1,0,0],[0,1,0],[-0.395913,0.801109,0]])
     # Colorspace transformation matrices
     rgb2lms = numpy.array([[17.8824,43.5161,4.11935],[3.45565,27.1554,3.86714],[0.0299566,0.184309,1.46709]])
+    
     lms2rgb = numpy.linalg.inv(rgb2lms)
     # Daltonize image correction matrix
     err2mod = numpy.array([[0,0,0],[0.7,1,0],[0.7,0,1]])
@@ -136,7 +194,7 @@ def execute(im, color_deficit):
         for j in range(RGB.shape[1]):
             _lms = _LMS[i,j,:3]
             _RGB[i,j,:3] = numpy.dot(lms2rgb, _lms)
-
+  
 ##    # Save simulation how image is perceived by a color blind
 ##    for i in range(RGB.shape[0]):
 ##        for j in range(RGB.shape[1]):
@@ -153,13 +211,14 @@ def execute(im, color_deficit):
 ##    im_simulation.save(simulation_fpath)
 
     # Calculate error between images
-    error = (RGB -_RGB)
+    error = (RGB - _RGB)
 
     # Daltonize
     ERR = numpy.zeros_like(RGB) 
     for i in range(RGB.shape[0]):
         for j in range(RGB.shape[1]):
             err = error[i,j,:3]
+            #err = [error.item(i,j,0), error.item(i,j,1), error.item(i,j,2)]
             ERR[i,j,:3] = numpy.dot(err2mod, err)
 
     dtpn = ERR + RGB
@@ -172,7 +231,8 @@ def execute(im, color_deficit):
             dtpn[i,j,1] = min(255, dtpn[i,j,1])
             dtpn[i,j,2] = max(0, dtpn[i,j,2])
             dtpn[i,j,2] = min(255, dtpn[i,j,2])
-
+      
+     
     result = dtpn.astype('uint8')
     
     # Save daltonized image
