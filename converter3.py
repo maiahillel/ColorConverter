@@ -21,7 +21,7 @@
    Explanations:
        * Normally this module is called from Moin.AttachFile.get_file
        * @param filename, fpath is the filename/fullpath to an image in the attachment
-         dir of a page. 
+         dir of a page.
        * @param color_deficit can either be
            - 'd' for Deuteranope image correction
            - 'p' for Protanope image correction
@@ -45,6 +45,7 @@ import numpy
 import os.path
 import cv2
 from numba import vectorize
+from timeit import default_timer as timer
 
 
 cameraPort = 0
@@ -57,13 +58,16 @@ def get_image():
 
 
 def video():
-
-    for x in range(1,4):
+    
+    for x in range(1,6):
+      start = timer()
       cv2_image = get_image()
-      im = cv2.cvtColor(cv2_image,cv2.COLOR_BGR2RGB)
-      lightReflectReduction(im)       
+      resized = cv2.resize(cv2_image, (800, 600))
+      im = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+      #lightReflectReduction(im)       
       image = execute(im ,'p')
       cv2.imshow('image',image)
+      print(timer() - start)
       cv2.waitKey(10)
 
 
@@ -164,18 +168,26 @@ def execute(im, color_deficit):
     rgb2lms = numpy.array([[17.8824,43.5161,4.11935],[3.45565,27.1554,3.86714],[0.0299566,0.184309,1.46709]])
     
     lms2rgb = numpy.linalg.inv(rgb2lms)
+
+    lmsd2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsd, rgb2lms))
+
+    lmsp2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsp, rgb2lms))
+
+    lmst2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmst, rgb2lms))
+    
     # Daltonize image correction matrix
     err2mod = numpy.array([[0,0,0],[0.7,1,0],[0.7,0,1]])
 
     # Get the requested image correction
     if color_deficit == 'd':
-        lms2lms_deficit = lms2lmsd
+        lms2lms_deficit = lmsd2rgb
     elif color_deficit == 'p':
-        lms2lms_deficit = lms2lmsp
+        lms2lms_deficit = lmsp2rgb
     elif color_deficit == 't':
-        lms2lms_deficit = lms2lmst
+        lms2lms_deficit = lmst2rgb
     
     # Transform to LMS space
+    """
     LMS = numpy.zeros_like(RGB)               
     for i in range(RGB.shape[0]):
         for j in range(RGB.shape[1]):
@@ -189,12 +201,15 @@ def execute(im, color_deficit):
             lms = LMS[i,j,:3]
             _LMS[i,j,:3] = numpy.dot(lms2lms_deficit, lms)
 
+
+      """
+    
     _RGB = numpy.zeros_like(RGB) 
     for i in range(RGB.shape[0]):
         for j in range(RGB.shape[1]):
-            _lms = _LMS[i,j,:3]
-            _RGB[i,j,:3] = numpy.dot(lms2rgb, _lms)
-  
+            rgb = RGB[i,j,:3]
+            _RGB[i,j,:3] = numpy.dot(lms2lms_deficit, rgb)
+    #print(timer() - start)
 ##    # Save simulation how image is perceived by a color blind
 ##    for i in range(RGB.shape[0]):
 ##        for j in range(RGB.shape[1]):
@@ -222,7 +237,7 @@ def execute(im, color_deficit):
             ERR[i,j,:3] = numpy.dot(err2mod, err)
 
     dtpn = ERR + RGB
-    
+    """
     for i in range(RGB.shape[0]):
         for j in range(RGB.shape[1]):
             dtpn[i,j,0] = max(0, dtpn[i,j,0])
@@ -231,8 +246,8 @@ def execute(im, color_deficit):
             dtpn[i,j,1] = min(255, dtpn[i,j,1])
             dtpn[i,j,2] = max(0, dtpn[i,j,2])
             dtpn[i,j,2] = min(255, dtpn[i,j,2])
-      
-     
+    """  
+    
     result = dtpn.astype('uint8')
     
     # Save daltonized image
