@@ -41,6 +41,7 @@
    @license: GNU GPL, see COPYING for details.
 
 """
+import sys
 import numpy
 import os.path
 import cv2
@@ -50,6 +51,25 @@ from timeit import default_timer as timer
 
 cameraPort = 0
 camera = cv2.VideoCapture(cameraPort)
+# Transformation matrix for Deuteranope (a form of red/green color deficit)
+lms2lmsd = numpy.array([[1,0,0],[0.494207,0,1.24827],[0,0,1]])
+# Transformation matrix for Protanope (another form of red/green color deficit)
+lms2lmsp = numpy.array([[0,2.02344,-2.52581],[0,1,0],[0,0,1]])
+# Transformation matrix for Tritanope (a blue/yellow deficit - very rare)
+lms2lmst = numpy.array([[1,0,0],[0,1,0],[-0.395913,0.801109,0]])
+# Colorspace transformation matrices
+rgb2lms = numpy.array([[17.8824,43.5161,4.11935],[3.45565,27.1554,3.86714],[0.0299566,0.184309,1.46709]])
+
+lms2rgb = numpy.linalg.inv(rgb2lms)
+
+lmsd2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsd, rgb2lms))
+
+lmsp2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsp, rgb2lms))
+
+lmst2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmst, rgb2lms))
+
+# Daltonize image correction matrix
+err2mod = numpy.array([[0,0,0],[0.7,1,0],[0.7,0,1]])
 
 def get_image():
    # read is the easiest way to get a full image out of a VideoCapture object.
@@ -57,18 +77,32 @@ def get_image():
     return im
 
 
-def video():
+def video(color_deficit):
     
+    # Get the requested image correction
+    if color_deficit == 'd':
+        transMat_deficit = lmsd2rgb
+    elif color_deficit == 'p':
+        transMat_deficit = lmsp2rgb
+    elif color_deficit == 't':
+        transMat_deficit = lmst2rgb
+
     for x in range(1,6):
+      
       start = timer()
       cv2_image = get_image()
       resized = cv2.resize(cv2_image, (800, 600))
-      im = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+      RGB = numpy.asarray(cv2.cvtColor(resized, cv2.COLOR_BGR2RGB), dtype=float)
       #lightReflectReduction(im)       
-      image = execute(im ,'p')
-      cv2.imshow('image',image)
+      ERR = execute(RGB ,transMat_deficit)
+
+      scaledErr = 0.1 * ERR
+
+      dtpn = (scaledErr * 5) + RGB
+      result = dtpn.astype('uint8')
+      cv2.imshow('image',result)
       print(timer() - start)
-      cv2.waitKey(10)
+      cv2.waitKey(1)
 
 
 def lightReflectReduction(imageToSet):
@@ -134,59 +168,9 @@ def lightReflectReduction(imageToSet):
           imageToSet.itemset((i,j,1), sumG / count)
           imageToSet.itemset((i,j,2), sumB / count) 
 
-#@vectorize(['float32[:, :](float32[:, :], int8)'], target='gpu')
-def execute(im, color_deficit):
+def execute(RGB, lms2lms_deficit):
 
-
-    #helpers_available = True
-    #try:
-    #    import numpy
-    #    from PIL import Image
-    #except:
-    #    helpers_available = False
-    #if not helpers_available:
-    #    return
-
-    # Get image data
-    #im = Image.open(fpath)
-    #fpath = "/Users/orbarda/Downloads/IMG_3424.JPG"
-    #cv2.imwrite(fpath, image)
-    #im = Image.open(fpath)
-    #if im.mode in ['1', 'L']: # Don't process black/white or grayscale images
-    #    return
-    #im = im.copy() 
-    #im = im.convert('RGB')
-    RGB = numpy.asarray(im, dtype=float)
-
-    # Transformation matrix for Deuteranope (a form of red/green color deficit)
-    lms2lmsd = numpy.array([[1,0,0],[0.494207,0,1.24827],[0,0,1]])
-    # Transformation matrix for Protanope (another form of red/green color deficit)
-    lms2lmsp = numpy.array([[0,2.02344,-2.52581],[0,1,0],[0,0,1]])
-    # Transformation matrix for Tritanope (a blue/yellow deficit - very rare)
-    lms2lmst = numpy.array([[1,0,0],[0,1,0],[-0.395913,0.801109,0]])
-    # Colorspace transformation matrices
-    rgb2lms = numpy.array([[17.8824,43.5161,4.11935],[3.45565,27.1554,3.86714],[0.0299566,0.184309,1.46709]])
-    
-    lms2rgb = numpy.linalg.inv(rgb2lms)
-
-    lmsd2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsd, rgb2lms))
-
-    lmsp2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsp, rgb2lms))
-
-    lmst2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmst, rgb2lms))
-    
-    # Daltonize image correction matrix
-    err2mod = numpy.array([[0,0,0],[0.7,1,0],[0.7,0,1]])
-
-    # Get the requested image correction
-    if color_deficit == 'd':
-        lms2lms_deficit = lmsd2rgb
-    elif color_deficit == 'p':
-        lms2lms_deficit = lmsp2rgb
-    elif color_deficit == 't':
-        lms2lms_deficit = lmst2rgb
-    
-    # Transform to LMS space
+   # Transform to LMS space
     """
     LMS = numpy.zeros_like(RGB)               
     for i in range(RGB.shape[0]):
@@ -210,6 +194,7 @@ def execute(im, color_deficit):
             rgb = RGB[i,j,:3]
             _RGB[i,j,:3] = numpy.dot(lms2lms_deficit, rgb)
     #print(timer() - start)
+
 ##    # Save simulation how image is perceived by a color blind
 ##    for i in range(RGB.shape[0]):
 ##        for j in range(RGB.shape[1]):
@@ -236,7 +221,7 @@ def execute(im, color_deficit):
             #err = [error.item(i,j,0), error.item(i,j,1), error.item(i,j,2)]
             ERR[i,j,:3] = numpy.dot(err2mod, err)
 
-    dtpn = ERR + RGB
+    
     """
     for i in range(RGB.shape[0]):
         for j in range(RGB.shape[1]):
@@ -246,14 +231,13 @@ def execute(im, color_deficit):
             dtpn[i,j,1] = min(255, dtpn[i,j,1])
             dtpn[i,j,2] = max(0, dtpn[i,j,2])
             dtpn[i,j,2] = min(255, dtpn[i,j,2])
-    """  
-    
-    result = dtpn.astype('uint8')
+      
+    """
     
     # Save daltonized image
     #im_converted = Image.fromarray(result, mode='RGB')
     
-    return result
+    return ERR
 
 
 if __name__ == '__main__':
@@ -266,17 +250,8 @@ if __name__ == '__main__':
                        'p': 'Protanope',
                        't': 'Tritanope',}
     
-    #cv2_image = get_image()
-    #cv2_image = cv2.imread("/Users/orbarda/Downloads/IMG_4366smaller.jpg")
-    #im = cv2.cvtColor(cv2_image,cv2.COLOR_BGR2RGB)
-    #im = Image.fromarray(cv2_image)                 
-    #image = execute(im ,'d')
-    #cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    #cv2.imshow('image',image)
-    #cv2.waitKey(0)
-    #cv2.imwrite("/Users/orbarda/Downloads/offir2.jpg", image)
 
     #camera.release()
-    video()
+    video('p')
     cv2.destroyAllWindows()
 
