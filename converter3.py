@@ -42,23 +42,26 @@
 
 """
 import sys
+
+sys.path.append('/usr/lib/pymodules/python2.7/')
+sys.path.append('/usr/lib/python2.7/dist-packages')
+sys.path.append('/usr/lib/pyshared/python2.7/')
+sys.path.append('/usr/local/lib/python2.7/site-packages/')
 import numpy
 import os.path
 import cv2
-from numba import vectorize
 from timeit import default_timer as timer
-
 
 cameraPort = 0
 camera = cv2.VideoCapture(cameraPort)
 # Transformation matrix for Deuteranope (a form of red/green color deficit)
-lms2lmsd = numpy.array([[1,0,0],[0.494207,0,1.24827],[0,0,1]])
+lms2lmsd = numpy.array([[1, 0, 0], [0.494207, 0, 1.24827], [0, 0, 1]])
 # Transformation matrix for Protanope (another form of red/green color deficit)
-lms2lmsp = numpy.array([[0,2.02344,-2.52581],[0,1,0],[0,0,1]])
+lms2lmsp = numpy.array([[0, 2.02344, -2.52581], [0, 1, 0], [0, 0, 1]])
 # Transformation matrix for Tritanope (a blue/yellow deficit - very rare)
-lms2lmst = numpy.array([[1,0,0],[0,1,0],[-0.395913,0.801109,0]])
+lms2lmst = numpy.array([[1, 0, 0], [0, 1, 0], [-0.395913, 0.801109, 0]])
 # Colorspace transformation matrices
-rgb2lms = numpy.array([[17.8824,43.5161,4.11935],[3.45565,27.1554,3.86714],[0.0299566,0.184309,1.46709]])
+rgb2lms = numpy.array([[17.8824, 43.5161, 4.11935], [3.45565, 27.1554, 3.86714], [0.0299566, 0.184309, 1.46709]])
 
 lms2rgb = numpy.linalg.inv(rgb2lms)
 
@@ -69,16 +72,17 @@ lmsp2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsp, rgb2lms))
 lmst2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmst, rgb2lms))
 
 # Daltonize image correction matrix
-err2mod = numpy.array([[0,0,0],[0.7,1,0],[0.7,0,1]])
+err2mod = numpy.array([[0, 0, 0], [0.7, 1, 0], [0.7, 0, 1]])
 
 def get_image():
-   # read is the easiest way to get a full image out of a VideoCapture object.
+    # read is the easiest way to get a full image out of a VideoCapture object.
     ret, im = camera.read()
     return im
 
+# def get_image():
+    # return cv2.imread("/Users/orbarda/Downloads/board.jpg")
 
 def video(color_deficit):
-    
     # Get the requested image correction
     if color_deficit == 'd':
         transMat_deficit = lmsd2rgb
@@ -87,86 +91,90 @@ def video(color_deficit):
     elif color_deficit == 't':
         transMat_deficit = lmst2rgb
 
-    for x in range(1,6):
-      
-      start = timer()
-      cv2_image = get_image()
-      resized = cv2.resize(cv2_image, (800, 600))
-      RGB = numpy.asarray(cv2.cvtColor(resized, cv2.COLOR_BGR2RGB), dtype=float)
-      #lightReflectReduction(im)       
-      ERR = execute(RGB ,transMat_deficit)
 
-      scaledErr = 0.1 * ERR
+    for x in xrange(1, 600):
 
-      dtpn = (scaledErr * 5) + RGB
-      result = dtpn.astype('uint8')
-      cv2.imshow('image',result)
-      print(timer() - start)
-      cv2.waitKey(1)
+        start = timer()
+
+        cv2_image = get_image()
+        resized = cv2.resize(cv2_image, (800, 600))
+        RGB = numpy.asarray(cv2.cvtColor(resized, cv2.COLOR_BGR2RGB), dtype=float)
+        # lightReflectReduction(im)
+        ERR = execute(RGB, transMat_deficit)
+        scaledErr = 0.1 * ERR
+        dtpn = (scaledErr * 10) + RGB
+
+        result = dtpn.astype('uint8')
+        # cv2.imwrite('result%s.png'%x,result)
+        BGR = numpy.asarray(cv2.cvtColor(result, cv2.COLOR_RGB2BGR), dtype=float)
+        cv2.imshow('image', numpy.concatenate((BGR.astype('uint8'),resized.astype('uint8')), axis=1))
+        # cv2.imshow('before', resized.astype('uint8'))
+        print(timer() - start)
+        cv2.waitKey(2)
 
 
 def lightReflectReduction(imageToSet):
     rows = imageToSet.shape[0]
     cols = imageToSet.shape[1]
-    
+
     for i in xrange(rows):
-      for j in xrange(cols):
-        R = imageToSet.item(i,j,0)
-        G = imageToSet.item(i,j,1)
-        B = imageToSet.item(i,j,2)
-        sumR = 0
-        sumG = 0
-        sumB = 0
-        count = 0
-        if ((B >= 220) and (G >= 220) and (R >= 220)):
-          
-          if(i > 0):
-            sumR += imageToSet.item(i - 1,j,0)
-            sumG += imageToSet.item(i - 1,j,1)
-            sumB += imageToSet.item(i - 1,j,2)
-            count = count + 1
-            if(j > 0):
-              sumR += imageToSet.item(i - 1,j - 1,0)
-              sumG += imageToSet.item(i - 1,j - 1,1)
-              sumB += imageToSet.item(i - 1,j - 1,2)
-              count = count + 1
-          
-          if(j > 0):
-            sumR += imageToSet.item(i,j - 1,0)
-            sumG += imageToSet.item(i,j - 1,1)
-            sumB += imageToSet.item(i,j - 1,2)
-            count = count + 1
-            if(i < rows - 1):
-              sumR += imageToSet.item(i + 1,j - 1,0)
-              sumG += imageToSet.item(i + 1,j - 1,1)
-              sumB += imageToSet.item(i + 1,j - 1,2)
-              count = count + 1
-          
-          if(i < rows - 1):
-            sumR += imageToSet.item(i + 1,j,0)
-            sumG += imageToSet.item(i + 1,j,1)
-            sumB += imageToSet.item(i + 1,j,2)
-            count = count + 1
-            if(j < cols - 1):
-              sumR += imageToSet.item(i + 1,j + 1,0)
-              sumG += imageToSet.item(i + 1,j + 1,1)
-              sumB += imageToSet.item(i + 1,j + 1,2)
-              count = count + 1
+        for j in xrange(cols):
+            R = imageToSet.item(i, j, 0)
+            G = imageToSet.item(i, j, 1)
+            B = imageToSet.item(i, j, 2)
+            sumR = 0
+            sumG = 0
+            sumB = 0
+            count = 0
+            if ((B >= 220) and (G >= 220) and (R >= 220)):
 
-          if(j < cols - 1):
-            sumR += imageToSet.item(i,j + 1,0)
-            sumG += imageToSet.item(i,j + 1,1)
-            sumB += imageToSet.item(i,j + 1,2)
-            count = count + 1
-            if(i > 0):
-              sumR += imageToSet.item(i,j + 1,0)
-              sumG += imageToSet.item(i,j + 1,1)
-              sumB += imageToSet.item(i,j + 1,2)
-              count = count + 1
+                if (i > 0):
+                    sumR += imageToSet.item(i - 1, j, 0)
+                    sumG += imageToSet.item(i - 1, j, 1)
+                    sumB += imageToSet.item(i - 1, j, 2)
+                    count = count + 1
+                    if (j > 0):
+                        sumR += imageToSet.item(i - 1, j - 1, 0)
+                        sumG += imageToSet.item(i - 1, j - 1, 1)
+                        sumB += imageToSet.item(i - 1, j - 1, 2)
+                        count = count + 1
 
-          imageToSet.itemset((i,j,0), sumR / count)
-          imageToSet.itemset((i,j,1), sumG / count)
-          imageToSet.itemset((i,j,2), sumB / count) 
+                if (j > 0):
+                    sumR += imageToSet.item(i, j - 1, 0)
+                    sumG += imageToSet.item(i, j - 1, 1)
+                    sumB += imageToSet.item(i, j - 1, 2)
+                    count = count + 1
+                    if (i < rows - 1):
+                        sumR += imageToSet.item(i + 1, j - 1, 0)
+                        sumG += imageToSet.item(i + 1, j - 1, 1)
+                        sumB += imageToSet.item(i + 1, j - 1, 2)
+                        count = count + 1
+
+                if (i < rows - 1):
+                    sumR += imageToSet.item(i + 1, j, 0)
+                    sumG += imageToSet.item(i + 1, j, 1)
+                    sumB += imageToSet.item(i + 1, j, 2)
+                    count = count + 1
+                    if (j < cols - 1):
+                        sumR += imageToSet.item(i + 1, j + 1, 0)
+                        sumG += imageToSet.item(i + 1, j + 1, 1)
+                        sumB += imageToSet.item(i + 1, j + 1, 2)
+                        count = count + 1
+
+                if (j < cols - 1):
+                    sumR += imageToSet.item(i, j + 1, 0)
+                    sumG += imageToSet.item(i, j + 1, 1)
+                    sumB += imageToSet.item(i, j + 1, 2)
+                    count = count + 1
+                    if (i > 0):
+                        sumR += imageToSet.item(i, j + 1, 0)
+                        sumG += imageToSet.item(i, j + 1, 1)
+                        sumB += imageToSet.item(i, j + 1, 2)
+                        count = count + 1
+
+                imageToSet.itemset((i, j, 0), sumR / count)
+                imageToSet.itemset((i, j, 1), sumG / count)
+                imageToSet.itemset((i, j, 2), sumB / count)
 
 def execute(RGB, lms2lms_deficit):
 
@@ -187,41 +195,46 @@ def execute(RGB, lms2lms_deficit):
 
 
       """
-    
-    _RGB = numpy.zeros_like(RGB) 
-    for i in range(RGB.shape[0]):
-        for j in range(RGB.shape[1]):
-            rgb = RGB[i,j,:3]
-            _RGB[i,j,:3] = numpy.dot(lms2lms_deficit, rgb)
-    #print(timer() - start)
 
-##    # Save simulation how image is perceived by a color blind
-##    for i in range(RGB.shape[0]):
-##        for j in range(RGB.shape[1]):
-##            _RGB[i,j,0] = max(0, _RGB[i,j,0])
-##            _RGB[i,j,0] = min(255, _RGB[i,j,0])
-##            _RGB[i,j,1] = max(0, _RGB[i,j,1])
-##            _RGB[i,j,1] = min(255, _RGB[i,j,1])
-##            _RGB[i,j,2] = max(0, _RGB[i,j,2])
-##            _RGB[i,j,2] = min(255, _RGB[i,j,2])
-##    simulation = _RGB.astype('uint8')
-##    im_simulation = Image.fromarray(simulation, mode='RGB')
-##    simulation_filename = "%s-%s-%s" % ('daltonize-simulation', color_deficit, filename)
-##    simulation_fpath = os.path.join(head, simulation_filename)
-##    im_simulation.save(simulation_fpath)
+    #_RGB = numpy.zeros_like(RGB)
+    # ERR = numpy.zeros_like(RGB)
+    start = timer()
+   # http://stackoverflow.com/questions/25922212/element-wise-matrix-multiplication-in-numpy
+    _RGB = numpy.einsum('ij,klj->kli',lms2lms_deficit, RGB)
+    # for i in range(RGB.shape[0]):
+    #     for j in range(RGB.shape[1]):
+    #         rgb = RGB[i, j, :3]
+    #         # _RGB[i, j, :3] = new_pixel_val
+    #         ERR[i, j, :3] = numpy.dot(err2mod, rgb-numpy.dot(lms2lms_deficit, rgb))
+    print('calc', timer() - start)
+
+        ##    # Save simulation how image is perceived by a color blind
+        ##    for i in range(RGB.shape[0]):
+        ##        for j in range(RGB.shape[1]):
+        ##            _RGB[i,j,0] = max(0, _RGB[i,j,0])
+        ##            _RGB[i,j,0] = min(255, _RGB[i,j,0])
+        ##            _RGB[i,j,1] = max(0, _RGB[i,j,1])
+        ##            _RGB[i,j,1] = min(255, _RGB[i,j,1])
+        ##            _RGB[i,j,2] = max(0, _RGB[i,j,2])
+        ##            _RGB[i,j,2] = min(255, _RGB[i,j,2])
+        ##    simulation = _RGB.astype('uint8')
+        ##    im_simulation = Image.fromarray(simulation, mode='RGB')
+        ##    simulation_filename = "%s-%s-%s" % ('daltonize-simulation', color_deficit, filename)
+        ##    simulation_fpath = os.path.join(head, simulation_filename)
+        ##    im_simulation.save(simulation_fpath)
 
     # Calculate error between images
     error = (RGB - _RGB)
-
     # Daltonize
-    ERR = numpy.zeros_like(RGB) 
-    for i in range(RGB.shape[0]):
-        for j in range(RGB.shape[1]):
-            err = error[i,j,:3]
-            #err = [error.item(i,j,0), error.item(i,j,1), error.item(i,j,2)]
-            ERR[i,j,:3] = numpy.dot(err2mod, err)
-
-    
+    #ERR = numpy.zeros_like(RGB)
+    ERR = numpy.einsum('ij,klj->kli',err2mod, error)
+    # start = timer()
+    # for i in range(RGB.shape[0]):
+    #     for j in range(RGB.shape[1]):
+    #         err = error[i, j, :3]
+    #         # err = [error.item(i,j,0), error.item(i,j,1), error.item(i,j,2)]
+    #         ERR[i, j, :3] = numpy.dot(err2mod, err)
+    # print('err calc', timer() - start)
     """
     for i in range(RGB.shape[0]):
         for j in range(RGB.shape[1]):
@@ -233,25 +246,25 @@ def execute(RGB, lms2lms_deficit):
             dtpn[i,j,2] = min(255, dtpn[i,j,2])
       
     """
-    
+
     # Save daltonized image
-    #im_converted = Image.fromarray(result, mode='RGB')
-    
+    # im_converted = Image.fromarray(result, mode='RGB')
+
     return ERR
 
 
 if __name__ == '__main__':
     import sys
+
     print "Daltonize image correction for color blind users"
 
     print "Please wait. Daltonizing in progress..."
 
-    colorblindness = { 'd': 'Deuteranope',
-                       'p': 'Protanope',
-                       't': 'Tritanope',}
-    
+    colorblindness = {'d': 'Deuteranope',
+                      'p': 'Protanope',
+                      't': 'Tritanope',}
 
-    #camera.release()
+    # camera.release()
     video('p')
     cv2.destroyAllWindows()
 
