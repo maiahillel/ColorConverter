@@ -47,10 +47,12 @@ sys.path.append('/usr/lib/pymodules/python2.7/')
 sys.path.append('/usr/lib/python2.7/dist-packages')
 sys.path.append('/usr/lib/pyshared/python2.7/')
 sys.path.append('/usr/local/lib/python2.7/site-packages/')
+
 import numpy
 import os.path
 import cv2
 from timeit import default_timer as timer
+import threading, time
 
 cameraPort = 0
 camera = cv2.VideoCapture(cameraPort)
@@ -64,54 +66,59 @@ lms2lmst = numpy.array([[1, 0, 0], [0, 1, 0], [-0.395913, 0.801109, 0]])
 rgb2lms = numpy.array([[17.8824, 43.5161, 4.11935], [3.45565, 27.1554, 3.86714], [0.0299566, 0.184309, 1.46709]])
 
 lms2rgb = numpy.linalg.inv(rgb2lms)
-
+# transformation matrix include moving back and forth to lms space
 lmsd2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsd, rgb2lms))
-
 lmsp2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmsp, rgb2lms))
-
 lmst2rgb = numpy.dot(lms2rgb, numpy.dot(lms2lmst, rgb2lms))
 
 # Daltonize image correction matrix
 err2mod = numpy.array([[0, 0, 0], [0.7, 1, 0], [0.7, 0, 1]])
-
+#key = 10
+zoom = 1
 def get_image():
     # read is the easiest way to get a full image out of a VideoCapture object.
     ret, im = camera.read()
     return im
 
+
 # def get_image():
-    # return cv2.imread("/Users/orbarda/Downloads/board.jpg")
+# return cv2.imread("/Users/orbarda/Downloads/board.jpg")
 
 def video(color_deficit):
     # Get the requested image correction
     if color_deficit == 'd':
-        transMat_deficit = lmsd2rgb
+        transmat_deficit = lmsd2rgb
     elif color_deficit == 'p':
-        transMat_deficit = lmsp2rgb
+        transmat_deficit = lmsp2rgb
     elif color_deficit == 't':
-        transMat_deficit = lmst2rgb
+        transmat_deficit = lmst2rgb
 
-
-    for x in xrange(1, 600):
-
+    for x in xrange(1, 100000000):
         start = timer()
 
         cv2_image = get_image()
         resized = cv2.resize(cv2_image, (800, 600))
-        RGB = numpy.asarray(cv2.cvtColor(resized, cv2.COLOR_BGR2RGB), dtype=float)
+        x = ((cv2_image.shape[0] / zoom) * zoom / 2.0) - (cv2_image.shape[0] / zoom / 2.0)
+        y = ((cv2_image.shape[1] / zoom) * zoom / 2.0) - (cv2_image.shape[1] / zoom / 2.0)
+        x1 = cv2_image.shape[0] / zoom
+        y1 = cv2_image.shape[1] / zoom
+        rect = cv2_image[x:x1, y:y1]
+        zoomed = cv2.resize(rect, (800, 600))
+        #cv2.imshow('zoom', zoomed)
+        RGB = numpy.asarray(cv2.cvtColor(zoomed, cv2.COLOR_BGR2RGB), dtype=float)
         # lightReflectReduction(im)
-        ERR = execute(RGB, transMat_deficit)
-        scaledErr = 0.1 * ERR
-        dtpn = (scaledErr * 10) + RGB
 
-        result = dtpn.astype('uint8')
-        # cv2.imwrite('result%s.png'%x,result)
-        BGR = numpy.asarray(cv2.cvtColor(result, cv2.COLOR_RGB2BGR), dtype=float)
-        cv2.imshow('image', numpy.concatenate((BGR.astype('uint8'),resized.astype('uint8')), axis=1))
-        # cv2.imshow('before', resized.astype('uint8'))
+        ERR = execute(RGB, transmat_deficit)
+        #scaledErr = 0.1 * ERR
+        dtpn = (ERR + RGB).clip(min=0,max=255)
+        #dtpn = dtpn.clip(max=255)
+        # dtpn = ERR + RGB
+        result = numpy.asarray(cv2.cvtColor(dtpn.astype('uint8'), cv2.COLOR_RGB2BGR), dtype='uint8')
+        # cv2.imshow('image', numpy.concatenate((result,resized.astype('uint8')), axis=1))
+        cv2.imshow('before', resized.astype('uint8'))
+        cv2.imshow('after', result)
         print(timer() - start)
-        cv2.waitKey(2)
-
+        cv2.waitKey(1)
 
 def lightReflectReduction(imageToSet):
     rows = imageToSet.shape[0]
@@ -176,82 +183,35 @@ def lightReflectReduction(imageToSet):
                 imageToSet.itemset((i, j, 1), sumG / count)
                 imageToSet.itemset((i, j, 2), sumB / count)
 
-def execute(RGB, lms2lms_deficit):
+def execute(RGB, man_matrix):
+    #start = timer()
+    # http://stackoverflow.com/questions/25922212/element-wise-matrix-multiplication-in-numpy
+    # By multiplying 3 matrices we are moving from rgb to lms space, and then calculate the image
+    # as seen by a color blind' and finally get back to rgb space
+    _RGB = numpy.einsum('ij,klj->kli', man_matrix, RGB)
 
-   # Transform to LMS space
-    """
-    LMS = numpy.zeros_like(RGB)               
-    for i in range(RGB.shape[0]):
-        for j in range(RGB.shape[1]):
-            rgb = RGB[i,j,:3]
-            LMS[i,j,:3] = numpy.dot(rgb2lms, rgb)
-
-    # Calculate image as seen by the color blind
-    _LMS = numpy.zeros_like(RGB)  
-    for i in range(RGB.shape[0]):
-        for j in range(RGB.shape[1]):
-            lms = LMS[i,j,:3]
-            _LMS[i,j,:3] = numpy.dot(lms2lms_deficit, lms)
-
-
-      """
-
-    #_RGB = numpy.zeros_like(RGB)
-    # ERR = numpy.zeros_like(RGB)
-    start = timer()
-   # http://stackoverflow.com/questions/25922212/element-wise-matrix-multiplication-in-numpy
-    _RGB = numpy.einsum('ij,klj->kli',lms2lms_deficit, RGB)
-    # for i in range(RGB.shape[0]):
-    #     for j in range(RGB.shape[1]):
-    #         rgb = RGB[i, j, :3]
-    #         # _RGB[i, j, :3] = new_pixel_val
-    #         ERR[i, j, :3] = numpy.dot(err2mod, rgb-numpy.dot(lms2lms_deficit, rgb))
-    print('calc', timer() - start)
-
-        ##    # Save simulation how image is perceived by a color blind
-        ##    for i in range(RGB.shape[0]):
-        ##        for j in range(RGB.shape[1]):
-        ##            _RGB[i,j,0] = max(0, _RGB[i,j,0])
-        ##            _RGB[i,j,0] = min(255, _RGB[i,j,0])
-        ##            _RGB[i,j,1] = max(0, _RGB[i,j,1])
-        ##            _RGB[i,j,1] = min(255, _RGB[i,j,1])
-        ##            _RGB[i,j,2] = max(0, _RGB[i,j,2])
-        ##            _RGB[i,j,2] = min(255, _RGB[i,j,2])
-        ##    simulation = _RGB.astype('uint8')
-        ##    im_simulation = Image.fromarray(simulation, mode='RGB')
-        ##    simulation_filename = "%s-%s-%s" % ('daltonize-simulation', color_deficit, filename)
-        ##    simulation_fpath = os.path.join(head, simulation_filename)
-        ##    im_simulation.save(simulation_fpath)
+    #print('calc', timer() - start)
 
     # Calculate error between images
     error = (RGB - _RGB)
-    # Daltonize
-    #ERR = numpy.zeros_like(RGB)
-    ERR = numpy.einsum('ij,klj->kli',err2mod, error)
-    # start = timer()
-    # for i in range(RGB.shape[0]):
-    #     for j in range(RGB.shape[1]):
-    #         err = error[i, j, :3]
-    #         # err = [error.item(i,j,0), error.item(i,j,1), error.item(i,j,2)]
-    #         ERR[i, j, :3] = numpy.dot(err2mod, err)
-    # print('err calc', timer() - start)
-    """
-    for i in range(RGB.shape[0]):
-        for j in range(RGB.shape[1]):
-            dtpn[i,j,0] = max(0, dtpn[i,j,0])
-            dtpn[i,j,0] = min(255, dtpn[i,j,0])
-            dtpn[i,j,1] = max(0, dtpn[i,j,1])
-            dtpn[i,j,1] = min(255, dtpn[i,j,1])
-            dtpn[i,j,2] = max(0, dtpn[i,j,2])
-            dtpn[i,j,2] = min(255, dtpn[i,j,2])
-      
-    """
+
+    # Daltonize: calculating the values for each pixel to be add to
+    ERR = numpy.einsum('ij,klj->kli', err2mod, error)
 
     # Save daltonized image
     # im_converted = Image.fromarray(result, mode='RGB')
 
     return ERR
 
+# def thread1():
+#     global key
+#     lock = threading.Lock()
+#     while True:
+#         with lock:
+#             key = input()
+
+
+# threading.Thread(target = thread1).start()
 
 if __name__ == '__main__':
     import sys
@@ -265,6 +225,5 @@ if __name__ == '__main__':
                       't': 'Tritanope',}
 
     # camera.release()
-    video('p')
+    video('t')
     cv2.destroyAllWindows()
-
