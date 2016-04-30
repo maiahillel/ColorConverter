@@ -19,12 +19,12 @@ class Tuner(object):
      
         self.converter = converter
         cv2.namedWindow(self.window_name)
+        cv2.moveWindow(self.window_name, 300, 180)
         
         cv2.createTrackbar("Adjust Image", self.window_name,
                            100, 100,
                            self.set_adjust)
-    
-      
+
         # Initialize first showing of the image
         self.update_image()
 
@@ -47,4 +47,4 @@ class Tuner(object):
         self.update_image()
 
     def destroy_windows(self):
-        cv2.destroyAllWindows()
+        cv2.destroyWindow(self.window_name)

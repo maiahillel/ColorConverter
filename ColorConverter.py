@@ -75,7 +75,7 @@ class ColorConverter:
 
     # Daltonize image correction matrix
     err2mod = numpy.array([[0, 0, 0], [0.7, 1, 0], [0.7, 0, 1]])
-    key = 10
+    key = 100
 
     def __init__(self, color_deficit):
 
