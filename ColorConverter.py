@@ -12,7 +12,7 @@ from timeit import default_timer as timer
 import threading, time
 
 
-class ColorConverter:
+class ColorConverter(object):
 
 
     """
@@ -125,7 +125,6 @@ class ColorConverter:
 
 
     def imagezoom(self, cv2_image):
-
         x = ((cv2_image.shape[0] / self.zoom) * self.zoom / 2.0) - (cv2_image.shape[0] / self.zoom / 2.0)
         y = ((cv2_image.shape[1] / self.zoom) * self.zoom / 2.0) - (cv2_image.shape[1] / self.zoom / 2.0)
         x1 = cv2_image.shape[0] / self.zoom
@@ -136,6 +135,7 @@ class ColorConverter:
 
 
     def convert(self):
+
         # start = timer()
         cv2_image = self.get_image()
         zoomed = self.imagezoom(cv2_image)

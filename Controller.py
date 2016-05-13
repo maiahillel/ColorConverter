@@ -1,8 +1,7 @@
 import ColorConverter
 import Tuner
 
-class Controller:
-
+class Controller(object):
 
     def main(self, color_deficit):
         color_converter = ColorConverter.ColorConverter(color_deficit)
@@ -10,8 +9,8 @@ class Controller:
     
         for x in xrange(1, 100000000):
 
-            new_image = color_converter.convert()
             self.tuner.set_image(color_converter)
+
 
 
     def kill(self):

@@ -1,0 +1,72 @@
+QPushButton {
+    background-color: #9cbac9;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 10px;
+    border-color: white;
+    font: bold 14px;
+    min-width: 10em;
+    padding: 10px;
+    width: 50px;
+    height: 20px;
+}
+
+QPushButton:pressed {
+    background-color: white;
+    border-style: inset;
+}
+
+QVBoxLayout {
+	margin: 1.5em auto 1.5em auto;
+  	border: .1em;
+  	padding: .9em;
+}
+
+QLabel { 
+	background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 10px;
+    border-color: white;
+    font: bold 14px;
+    min-width: 10em;
+    padding: 6px;
+}
+
+
+QScrollBar:horizontal {
+    border: 2px solid grey;
+    background: #32CC99;
+    height: 15px;
+    margin: 0px 20px 0 20px;
+}
+QScrollBar::handle:horizontal {
+    background: white;
+    min-width: 20px;
+}
+QScrollBar::add-line:horizontal {
+    border: 2px solid grey;
+    background: #32CC99;
+    width: 20px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal {
+    border: 2px solid grey;
+    background: #32CC99;
+    width: 20px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar:left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+    border: 2px solid grey;
+    width: 3px;
+    height: 3px;
+    background: white;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+}

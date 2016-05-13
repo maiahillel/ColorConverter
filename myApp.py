@@ -21,7 +21,7 @@ def welcomeWindow():
 
     sshFile="style.stylesheet"
     with open(sshFile,"r") as fh:
-      w.setStyleSheet(fh.read())
+        w.setStyleSheet(fh.read())
 
     image = QtGui.QLabel()
     pixMap = QtGui.QPixmap("Binocolors.jpg")
@@ -92,62 +92,62 @@ def open_test():
 pid = None
 def window():
 
-   app = QtGui.QApplication(sys.argv)
-   
-   layout = QtGui.QGridLayout()
+    app = QtGui.QApplication(sys.argv)
 
-   w = QtGui.QWidget()
+    layout = QtGui.QGridLayout()
 
-   sshFile="style.stylesheet"
-   with open(sshFile,"r") as fh:
-      w.setStyleSheet(fh.read())
+    w = QtGui.QWidget()
 
-   label = QtGui.QLabel(w)
-   label.setText("Hello! Please Click " +'''<a href='http://www.color-blindness.com/farnsworth-munsell-100-hue-color-vision-test/#prettyPhoto'> This link </a>''' + " and perform the test so we could get started...")
-   label.setOpenExternalLinks(True)
-   label.move(50,20)
-   layout.addWidget(label, 1, 1,1,2)
+    sshFile="style.stylesheet"
+    with open(sshFile,"r") as fh:
+        w.setStyleSheet(fh.read())
 
-   w.setGeometry(300,50,800,90)
-   w.setWindowTitle("Color Converter")
-   w.show()
+    label = QtGui.QLabel(w)
+    label.setText("Hello! Please Click " +'''<a href='http://www.color-blindness.com/farnsworth-munsell-100-hue-color-vision-test/#prettyPhoto'> This link </a>''' + " and perform the test so we could get started...")
+    label.setOpenExternalLinks(True)
+    label.move(50,20)
+    layout.addWidget(label, 1, 1,1,2)
 
-   
+    w.setGeometry(300,50,800,90)
+    w.setWindowTitle("Color Converter")
+    w.show()
 
 
-   button = QPushButton(w)
-   layout.addWidget(button, 2, 1)
-   button.setText("Launch Camera")
-   button.setGeometry(100,100,200,100)
-   button.clicked.connect(launch_clicked)
-   button.show()
-
-   endButton = QPushButton(w)
-   layout.addWidget(endButton,2,2)
-   endButton.setText("End")
-   endButton.setGeometry(100,100,200,100)
-   endButton.clicked.connect(kill_clicked)
-   endButton.show()
 
 
-   w.setLayout(layout)
-   sys.exit(app.exec_())
+    button = QPushButton(w)
+    layout.addWidget(button, 2, 1)
+    button.setText("Launch Camera")
+    button.setGeometry(100,100,200,100)
+    button.clicked.connect(launch_clickedD())
+    button.show()
 
-#def valuechange():
+    endButton = QPushButton(w)
+    layout.addWidget(endButton,2,2)
+    endButton.setText("End")
+    endButton.setGeometry(100,100,200,100)
+    endButton.clicked.connect(kill_clicked)
+    endButton.show()
+
+
+    w.setLayout(layout)
+    sys.exit(app.exec_())
+
+# def valuechange():
 #   size = sl.value()
 #   l1.setFont(QFont("Arial",size))
-	
+
 def launch_clickedD():
 
-   controller.main('d')
+    controller.main('d')
 
-   # global pid
-   # if (pid != None):
-   #      pid.kill()
-   # pid = subprocess.Popen([sys.executable, "/Users/orbarda/Documents/Studies/Milab/ColorConverter/main.py"])
+    # global pid
+    # if (pid != None):
+    #      pid.kill()
+    # pid = subprocess.Popen([sys.executable, "/Users/orbarda/Documents/Studies/Milab/ColorConverter/main.py"])
 
-   #time.sleep(20)
-   #pid.kill()   
+    # time.sleep(20)
+    # pid.kill()
 
 def launch_clickedP():
 
@@ -155,11 +155,12 @@ def launch_clickedP():
 
 def launch_clickedT():
 
-   controller.main('t')
+    controller.main('t')
 
 
 def kill_clicked():
-   controller.kill()
+    controller.kill()
 
 if __name__ == '__main__':
-   welcomeWindow()
+    welcomeWindow()
+
