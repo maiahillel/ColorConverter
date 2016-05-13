@@ -86,9 +86,7 @@ class ColorConverter(object):
         elif color_deficit == 't':
             self.transmat_deficit = self.lmst2rgb
 
-        self.cameraPort = 0
-        self.camera = cv2.VideoCapture(self.cameraPort)
-        self.zoom = 1
+        self.zoom = 1.0
 
 
     def get_image(self):
@@ -134,10 +132,9 @@ class ColorConverter(object):
         return cv2.resize(rect, (800, 600))
 
 
-    def convert(self):
+    def convert(self, cv2_image):
 
         # start = timer()
-        cv2_image = self.get_image()
         zoomed = self.imagezoom(cv2_image)
 
         rgb = numpy.asarray(cv2.cvtColor(zoomed, cv2.COLOR_BGR2RGB), dtype=float)

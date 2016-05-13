@@ -1,19 +1,60 @@
-QPushButton {
-    background-color: #9cbac9;
+QPushButton[accessibleName="Red"] {
+    background-image: url("Red.png");
     border-style: outset;
     border-width: 2px;
-    border-radius: 10px;
-    border-color: white;
+    border-radius: 5px;
+    border-color: transparent;
     font: bold 14px;
     min-width: 10em;
-    padding: 10px;
-    width: 50px;
-    height: 20px;
+    padding: 0;
+    margin: 0;
+    width: 190px;
+    height: 28px;
 }
 
-QPushButton:pressed {
-    background-color: white;
-    border-style: inset;
+
+QPushButton[accessibleName="Red"]:pressed {
+    background-image: url("RedPressed.png");
+    border-style: outset;
+}
+
+QPushButton[accessibleName="Green"] {
+    background-image: url("Green.png");
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 5px;
+    border-color: transparent;
+    font: bold 14px;
+    min-width: 10em;
+    padding: 0;
+    margin: 0;
+    width: 190px;
+    height: 28px;
+}
+
+QPushButton[accessibleName="Green"]:pressed {
+    background-image: url("GreenPressed.png");
+    border-style: outset;
+}
+
+QPushButton[accessibleName="Blue"] {
+    background-image: url("Blue.png");
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 5px;
+    border-color: transparent;
+    font: bold 14px;
+    min-width: 10em;
+    padding: 0;
+    margin: 0;
+    width: 190px;
+    height: 28px;
+}
+
+
+QPushButton[accessibleName="Blue"]:pressed {
+    background-image: url("BluePressed.png");
+    border-style: outset;
 }
 
 QVBoxLayout {
@@ -29,44 +70,62 @@ QLabel {
     border-radius: 10px;
     border-color: white;
     font: bold 14px;
-    min-width: 10em;
+    min-width: 100em;
     padding: 6px;
 }
 
 
-QScrollBar:horizontal {
-    border: 2px solid grey;
-    background: #32CC99;
-    height: 15px;
-    margin: 0px 20px 0 20px;
-}
-QScrollBar::handle:horizontal {
-    background: white;
-    min-width: 20px;
-}
-QScrollBar::add-line:horizontal {
-    border: 2px solid grey;
-    background: #32CC99;
-    width: 20px;
-    subcontrol-position: right;
-    subcontrol-origin: margin;
-}
+QScrollBar:vertical {
+     border-style: outset;
+     border-width: 2px;
+     border-radius: 5px;
+     border-color: transparent;
+     background: #486b8a;
+     width: 15px;
+     height: 400px;
+     margin: 22px 0 22px 0;
+ }
 
-QScrollBar::sub-line:horizontal {
-    border: 2px solid grey;
-    background: #32CC99;
-    width: 20px;
-    subcontrol-position: left;
-    subcontrol-origin: margin;
-}
+ QScrollBar::handle:vertical {
+     background: white;
+     height: 10px;
+     border-style: outset;
+     border-width: 2px;
+     border-radius: 5px;
+     border-color: transparent;
 
-QScrollBar:left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
-    border: 2px solid grey;
-    width: 3px;
-    height: 3px;
-    background: white;
-}
+ }
 
-QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
-    background: none;
-}
+ QScrollBar::add-line:vertical {
+     border: 2px solid grey;
+     background: #486b8a;
+     height: 20px;
+     border-style: outset;
+     border-width: 2px;
+     border-radius: 5px;
+     border-color: transparent;
+     subcontrol-position: bottom;
+     subcontrol-origin: margin;
+ }
+
+ QScrollBar::sub-line:vertical {
+     border: 2px solid grey;
+     background: #486b8a;
+     height: 20px;
+     border-style: outset;
+     border-width: 2px;
+     border-radius: 5px;
+     border-color: transparent;
+     subcontrol-position: top;
+     subcontrol-origin: margin;
+ }
+ QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+     border: 2px solid grey;
+     width: 3px;
+     height: 1px;
+     background: white;
+ }
+
+ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+     background: none;
+ }

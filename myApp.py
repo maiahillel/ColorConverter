@@ -13,8 +13,8 @@ from PyQt4 import QtGui
 controller = Controller.Controller()
 
 def welcomeWindow():
-    app2 = QtGui.QApplication(sys.argv)
 
+    app2 = QtGui.QApplication(sys.argv)
     boxLayout = QtGui.QVBoxLayout()
 
     w = QtGui.QWidget()
@@ -34,7 +34,7 @@ def welcomeWindow():
 
     label = QtGui.QLabel(w)
     label.setText("What type of colorblind are you?")
-    label.move(50,20)
+    label.move(50, 20)
     boxLayout.addWidget(label)
 
     #hbox = QtGui.QHBoxLayout()
@@ -46,7 +46,7 @@ def welcomeWindow():
     #hbox.addStretch()
     #boxLayout.addLayout(hbox)
     button.setText("Problem with Red Cone")
-    button.setGeometry(100,100,200,200)
+    button.setGeometry(100, 100, 200, 200)
     button.clicked.connect(launch_clickedD)
     boxLayout.addWidget(button)
     button.show()
@@ -61,21 +61,21 @@ def welcomeWindow():
     button = QPushButton(w)
     boxLayout.addWidget(button)
     button.setText("Problem with Blue Cone")
-    button.setGeometry(100,100,200,200)
+    button.setGeometry(100, 100, 200, 200)
     button.clicked.connect(launch_clickedT)
     button.show()
 
     button = QPushButton(w)
     boxLayout.addWidget(button)
     button.setText("Not sure? Let's Check")
-    button.setGeometry(100,100,200,200)
+    button.setGeometry(100, 100, 200, 200)
     button.clicked.connect(open_test)
     button.show()
 
     endButton = QPushButton(w)
     boxLayout.addWidget(endButton)
     endButton.setText("End")
-    endButton.setGeometry(100,100,200,100)
+    endButton.setGeometry(100, 100, 200, 100)
     endButton.clicked.connect(kill_clicked)
     endButton.show()
 
@@ -106,26 +106,23 @@ def window():
     label.setText("Hello! Please Click " +'''<a href='http://www.color-blindness.com/farnsworth-munsell-100-hue-color-vision-test/#prettyPhoto'> This link </a>''' + " and perform the test so we could get started...")
     label.setOpenExternalLinks(True)
     label.move(50,20)
-    layout.addWidget(label, 1, 1,1,2)
+    layout.addWidget(label, 1, 1, 1, 2)
 
-    w.setGeometry(300,50,800,90)
+    w.setGeometry(300, 50, 800, 90)
     w.setWindowTitle("Color Converter")
     w.show()
-
-
-
 
     button = QPushButton(w)
     layout.addWidget(button, 2, 1)
     button.setText("Launch Camera")
-    button.setGeometry(100,100,200,100)
+    button.setGeometry(100, 100, 200, 100)
     button.clicked.connect(launch_clickedD())
     button.show()
 
     endButton = QPushButton(w)
-    layout.addWidget(endButton,2,2)
+    layout.addWidget(endButton, 2, 2)
     endButton.setText("End")
-    endButton.setGeometry(100,100,200,100)
+    endButton.setGeometry(100, 100, 200, 100)
     endButton.clicked.connect(kill_clicked)
     endButton.show()
 
@@ -140,7 +137,6 @@ def window():
 def launch_clickedD():
 
     controller.main('d')
-
     # global pid
     # if (pid != None):
     #      pid.kill()
