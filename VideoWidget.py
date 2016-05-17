@@ -59,3 +59,14 @@ class VideoWidget(QWidget):
         self._image = self._build_image(image)
         self.update()
 
+    def set_to_d(self):
+        self.color_converter.set_deficit('d')
+
+    def set_to_p(self):
+        self.color_converter.set_deficit('p')
+
+    def set_to_t(self):
+        self.color_converter.set_deficit('t')
+
+    def set_key(self, key, zoom):
+        self.color_converter.set_key(key, zoom)

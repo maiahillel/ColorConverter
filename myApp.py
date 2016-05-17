@@ -1,25 +1,28 @@
 import sys
 import subprocess
 import time
-from PyQt4.QtCore import *
+from PyQt4 import QtCore
 import Controller
 import webbrowser
-
+import VideoWidget
 
 from PyQt4.QtGui import *
 
 from PyQt4 import QtGui
 
 controller = Controller.Controller()
+app = None
+w = None
 
 def welcomeWindow():
 
-    app2 = QtGui.QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
+
     boxLayout = QtGui.QVBoxLayout()
 
     w = QtGui.QWidget()
 
-    sshFile="style.stylesheet"
+    sshFile="style1.stylesheet"
     with open(sshFile,"r") as fh:
         w.setStyleSheet(fh.read())
 
@@ -84,51 +87,12 @@ def welcomeWindow():
 
     w.show()
 
-    sys.exit(app2.exec_())
+    app.exec_()
 
 def open_test():
     webbrowser.open('http://www.color-blindness.com/farnsworth-munsell-100-hue-color-vision-test/#prettyPhoto')
 
 pid = None
-def window():
-
-    app = QtGui.QApplication(sys.argv)
-
-    layout = QtGui.QGridLayout()
-
-    w = QtGui.QWidget()
-
-    sshFile="style.stylesheet"
-    with open(sshFile,"r") as fh:
-        w.setStyleSheet(fh.read())
-
-    label = QtGui.QLabel(w)
-    label.setText("Hello! Please Click " +'''<a href='http://www.color-blindness.com/farnsworth-munsell-100-hue-color-vision-test/#prettyPhoto'> This link </a>''' + " and perform the test so we could get started...")
-    label.setOpenExternalLinks(True)
-    label.move(50,20)
-    layout.addWidget(label, 1, 1, 1, 2)
-
-    w.setGeometry(300, 50, 800, 90)
-    w.setWindowTitle("Color Converter")
-    w.show()
-
-    button = QPushButton(w)
-    layout.addWidget(button, 2, 1)
-    button.setText("Launch Camera")
-    button.setGeometry(100, 100, 200, 100)
-    button.clicked.connect(launch_clickedD())
-    button.show()
-
-    endButton = QPushButton(w)
-    layout.addWidget(endButton, 2, 2)
-    endButton.setText("End")
-    endButton.setGeometry(100, 100, 200, 100)
-    endButton.clicked.connect(kill_clicked)
-    endButton.show()
-
-
-    w.setLayout(layout)
-    sys.exit(app.exec_())
 
 # def valuechange():
 #   size = sl.value()
@@ -136,7 +100,7 @@ def window():
 
 def launch_clickedD():
 
-    controller.main('d')
+    controller.main('d', app)
     # global pid
     # if (pid != None):
     #      pid.kill()
@@ -147,16 +111,20 @@ def launch_clickedD():
 
 def launch_clickedP():
 
-    controller.main('p')
+    controller.main('p', app)
+
 
 def launch_clickedT():
 
-    controller.main('t')
-
+    controller.main('t', app)
 
 def kill_clicked():
     controller.kill()
 
+
 if __name__ == '__main__':
+
+
     welcomeWindow()
+
 

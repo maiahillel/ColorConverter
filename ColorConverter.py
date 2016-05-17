@@ -176,6 +176,18 @@ class ColorConverter(object):
 
         return ERR
 
+    def set_deficit(self, color_deficit):
+        if color_deficit == 'd':
+            self.transmat_deficit = self.lmsd2rgb
+        elif color_deficit == 'p':
+            self.transmat_deficit = self.lmsp2rgb
+        elif color_deficit == 't':
+            self.transmat_deficit = self.lmst2rgb
+
+    def set_key(self, key, zoom):
+        self.key = key
+        self.zoom = 1.0 + (zoom / 100.0)
+
 
     # def thread1():
     #     global key
