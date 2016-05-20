@@ -17,7 +17,7 @@ from PyQt4 import QtGui
 class Controller(object):
 
     def set_key(self):
-        self.widget.set_key(self.scale.value(), self.zoom.value())
+        self.widget.set_key(-1 * self.scale.value(), -1 * self.zoom.value())
 
     def main(self, color_deficit, app):
 
@@ -48,15 +48,18 @@ class Controller(object):
         blue.show()
 
         self.scale = QtGui.QScrollBar(self.widget)
-        self.scale.setMaximum(100)
+        self.scale.setMaximum(0)
+        self.scale.setMinimum(-100)
         self.scale.move(750, 100)
         self.scale.sliderMoved.connect(self.set_key)
         self.scale.show()
 
         self.zoom = QtGui.QScrollBar(self.widget)
-        self.zoom.setMaximum(100)
+        self.zoom.setMaximum(0)
+        self.zoom.setMinimum(-100)
         self.zoom.move(750, 300)
         self.zoom.sliderMoved.connect(self.set_key)
+        self.zoom.setWindowTitle("zoom")
         self.zoom.show()
 
         self.widget.show()
