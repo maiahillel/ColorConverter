@@ -1,4 +1,3 @@
-import numpy
 import cv2 as cv
 from PyQt4.QtGui import *
 

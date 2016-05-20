@@ -119,6 +119,7 @@ QScrollBar:vertical {
      subcontrol-position: top;
      subcontrol-origin: margin;
  }
+
  QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
      border: 2px solid grey;
      width: 3px;

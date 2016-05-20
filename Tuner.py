@@ -8,57 +8,29 @@ sys.path.append('/usr/local/lib/python2.7/site-packages/')
 import numpy
 import os.path
 import cv2
+from matplotlib import pyplot as plt
 from PyQt4.QtGui import QApplication, QImage, QPainter, QWidget, qRgb
 
-class Tuner(object):
+capture = cv2.VideoCapture(0)
 
-    #: Window to show results in
-    window_name = "Tuner"
-    
-    def __init__(self, converter):
-        
-        self.situation = 1
-        self.converter = converter
-        cv2.namedWindow(self.window_name)
-        cv2.moveWindow(self.window_name, 300, 180)
-        
-        cv2.createTrackbar("Adjust Image", self.window_name,
-                           100, 100,
-                           self.set_adjust)
+if __name__ == '__main__':
 
-        # cv2.createTrackbar("Zoom Image", self.window_name,
-        #                    0, 100,
-        #                    self.set_adjust)
+    ret, img = capture.read()
+    img = cv2.imread('OpenCV_Logo_B.png')     # input
+    mask = cv2.imread('OpenCV_Logo_C.png',0)  # mask
 
-        # Initialize first showing of the image
-        self.update_image()
+    dst_TELEA = cv2.inpaint(img,mask,3,cv2.INPAINT_TELEA)
+    dst_NS = cv2.inpaint(img,mask,3,cv2.INPAINT_NS)
 
-    def set_adjust(self, setting):
+    plt.subplot(221), plt.imshow(img)
+    plt.title('degraded image')
+    plt.subplot(222), plt.imshow(mask, 'gray')
+    plt.title('mask image')
+    plt.subplot(223), plt.imshow(dst_TELEA)
+    plt.title('TELEA')
+    plt.subplot(224), plt.imshow(dst_NS)
+    plt.title('NS')
 
-        # self.image.key = setting
-        self.converter.key = setting
-        # self.update_image()
-
-
-    # def set_zoom(self, setting):
-    #
-    #     # self.image.key = setting
-    #     self.converter.zoom = (1 + setting / 100)
-    #     # self.update_image()
-
-    def update_image(self):
-
-        image = self.converter.convert()
-        # update the image shown on screen
-        cv2.imshow(self.window_name, image)
-        cv2.waitKey(1)
-
-    def set_image(self, image):
-        # first initialization of image onto screen
-        self.image = image
-        self.update_image()
-
-    def destroy_windows(self):
-        cv2.destroyWindow(self.window_name)
-        cv2.destroyAllWindows()
+    plt.tight_layout()
+    plt.show()
 

@@ -2,13 +2,13 @@ QPushButton {
     background-color: #9cbac9;
     border-style: outset;
     border-width: 2px;
-    border-radius: 10px;
-    border-color: white;
+    border-radius: 15px;
+    border-color: black;
     font: bold 14px;
     min-width: 10em;
     padding: 10px;
-    width: 50px;
-    height: 20px;
+    width: 350px;
+    height: 30px;
 }
 
 QPushButton:pressed {
@@ -23,12 +23,15 @@ QVBoxLayout {
 }
 
 QLabel {
-	background-color: white;
+    background-image: url("Binocolors.png");
     border-style: outset;
     border-width: 2px;
-    border-radius: 10px;
-    border-color: white;
+    border-radius: 5px;
+    border-color: transparent;
     font: bold 14px;
     min-width: 10em;
-    padding: 6px;
+    padding: 0;
+    margin: 0;
+    width: 300px;
+    height: 116px;
 }
