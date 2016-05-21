@@ -1,11 +1,11 @@
+#The window where the video will be, with the buttons and scrollers
+
 import sys
 
 sys.path.append('/usr/lib/pymodules/python2.7/')
 sys.path.append('/usr/lib/python2.7/dist-packages')
 sys.path.append('/usr/lib/pyshared/python2.7/')
 sys.path.append('/usr/local/lib/python2.7/site-packages/')
-
-
 
 import VideoWidget
 from PyQt4 import QtGui

@@ -2,6 +2,7 @@ import sys
 from PyQt4 import QtCore
 import Controller
 import webbrowser
+import WelcomeDialog
 
 from PyQt4.QtGui import *
 
@@ -14,6 +15,12 @@ w = None
 def welcomeWindow():
 
     app = QtGui.QApplication(sys.argv)
+
+    welcomeW = QtGui.QWidget()
+
+    # Show welcome window with the option to do the test
+    dialog = WelcomeDialog.WelcomeDialog(welcomeW)
+    result = dialog.exec_()
 
     w = QtGui.QWidget()
 
@@ -59,13 +66,15 @@ def welcomeWindow():
 
     app.exec_()
 
-def open_test():
-    webbrowser.open('http://www.color-blindness.com/fm100hue/FM100Hue.swf?width=980&height=500')
+#def open_test():
+#    webbrowser.open('http://www.color-blindness.com/fm100hue/FM100Hue.swf?width=980&height=500')
 
 
 def launch_clickedD():
 
+
     controller.main('d', app)
+
 
 
 def launch_clickedP():

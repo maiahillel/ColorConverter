@@ -2,8 +2,8 @@ QPushButton {
     background-color: #9cbac9;
     border-style: outset;
     border-width: 2px;
-    border-radius: 15px;
-    border-color: black;
+    border-radius: 6px;
+    border-color: transparent;
     font: bold 14px;
     min-width: 10em;
     padding: 10px;
@@ -23,7 +23,7 @@ QVBoxLayout {
 }
 
 QLabel {
-    background-image: url("Binocolors.png");
+
     border-style: outset;
     border-width: 2px;
     border-radius: 5px;
